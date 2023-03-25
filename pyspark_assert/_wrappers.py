@@ -15,11 +15,29 @@ class ImposterType:
 
         self._name = name
         self._args = args
+        # Store hash, so we don't have to compute it every time
+        self._hash_value = None
 
-    def __eq__(self, other: ImposterType):
+    @property
+    def hash(self) -> int:
+        if self._hash_value is None:
+            self._hash_value = hash((self._name, self._hashable_args(self._args)))
+        return self._hash_value
+
+    def _hashable_args(self, args: Any):
+        if isinstance(args, dict):
+            return tuple((key, self._hashable_args(value)) for key, value in args.items())
+        if isinstance(args, (list, set)):
+            return tuple(self._hashable_args(elem) for elem in args)
+        return args
+
+    def __eq__(self, other: ImposterType) -> bool:
         return self._name == other._name and self._args == other._args
 
-    def __repr__(self):
+    def __hash__(self) -> int:
+        return self.hash
+
+    def __repr__(self) -> str:
         if not self._args:
             return self._name
 
@@ -87,6 +105,9 @@ class Column:
     def __eq__(self, other: Column) -> bool:
         # Column name is also stored inside the column, so there is no need to check that
         return self._column == other._column
+
+    def __hash__(self) -> int:
+        return hash(self._column)
 
     def __repr__(self) -> str:
         return repr(self._column)
