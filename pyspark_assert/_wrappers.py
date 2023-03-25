@@ -9,43 +9,43 @@ from pyspark.sql import types
 
 class ImposterType:
 
-    def __init__(self, name: str, args: Optional[Dict[str, Any]] = None):
-        if args is None:
-            args = {}
+    def __init__(self, name: str, attrs: Optional[Dict[str, Any]] = None):
+        if attrs is None:
+            attrs = {}
 
         self._name = name
-        self._args = args
+        self._attrs = attrs
         # Store hash, so we don't have to compute it every time
         self._hash_value = None
 
     @property
     def hash(self) -> int:
         if self._hash_value is None:
-            self._hash_value = hash((self._name, self._hashable_args(self._args)))
+            self._hash_value = hash((self._name, self._hashable_attrs(self._attrs)))
         return self._hash_value
 
-    def _hashable_args(self, args: Any):
-        if isinstance(args, dict):
-            return tuple((key, self._hashable_args(value)) for key, value in args.items())
-        if isinstance(args, (list, set)):
-            return tuple(self._hashable_args(elem) for elem in args)
-        return args
+    def _hashable_attrs(self, attrs: Any):
+        if isinstance(attrs, dict):
+            return tuple((key, self._hashable_attrs(value)) for key, value in attrs.items())
+        if isinstance(attrs, (list, set)):
+            return tuple(self._hashable_attrs(elem) for elem in attrs)
+        return attrs
 
     def __eq__(self, other: ImposterType) -> bool:
-        return self._name == other._name and self._args == other._args
+        return self._name == other._name and self._attrs == other._attrs
 
     def __hash__(self) -> int:
         return self.hash
 
     def __repr__(self) -> str:
-        if not self._args:
+        if not self._attrs:
             return self._name
 
-        args_str = ', '.join(
+        attrs_str = ', '.join(
             f'{key}={repr(value)}'
-            for key, value in self._args.items()
+            for key, value in self._attrs.items()
         )
-        return f'{self._name}({args_str})'
+        return f'{self._name}({attrs_str})'
 
 
 class Column:
