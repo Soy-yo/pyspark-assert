@@ -9,7 +9,7 @@ class TemplatedAssertionError(AssertionError):
 
 class IncorrectTypeAssertionError(TemplatedAssertionError):
 
-    msg_template = '{0} is not a DataFrame ({1})'
+    msg_template = '{0} is not a {1} ({2})'
 
 
 class DifferentLengthAssertionError(TemplatedAssertionError):

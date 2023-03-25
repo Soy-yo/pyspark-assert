@@ -35,9 +35,9 @@ def assert_frame_equal(
         atol: float = 1.0e-8,
 ):
     if not isinstance(left, pyspark.sql.DataFrame):
-        raise IncorrectTypeAssertionError('left', left.__class__.__name__)
+        raise IncorrectTypeAssertionError('left', 'DataFrame', left.__class__.__name__)
     if not isinstance(right, pyspark.sql.DataFrame):
-        raise IncorrectTypeAssertionError('right', right.__class__.__name__)
+        raise IncorrectTypeAssertionError('right', 'DataFrame', right.__class__.__name__)
 
     assert_schema_equal(
         left.schema,
