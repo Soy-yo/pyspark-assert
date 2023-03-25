@@ -16,8 +16,8 @@ class DifferentLengthAssertionError(TemplatedAssertionError):
 
     msg_template = (
         'Lengths are different\n'
-        '\tExpected :{1}\n'
-        '\tActual   :{0}'
+        '\tExpected : {1}\n'
+        '\tActual   : {0}'
     )
 
 
@@ -25,6 +25,6 @@ class DifferentSchemaAssertionError(TemplatedAssertionError):
 
     msg_template = (
         'Schemas are different\n'
-        '\tExpected :{1}\n'
-        '\tActual   :{0}'
+        '\tExpected : {1}\n'
+        '\tActual   : {0}'
     )
