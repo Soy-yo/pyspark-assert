@@ -1,5 +1,3 @@
-import math
-from collections import Counter
 from typing import List
 
 import pyspark
@@ -10,7 +8,7 @@ from ._assertions import (
     DifferentSchemaAssertionError,
 )
 from ._utils import cache
-from ._wrappers import Column
+from ._wrappers import Column, ColumnCounter
 
 
 _NULLABILITY_ATTRS = [
@@ -86,8 +84,8 @@ def assert_schema_equal(
 
     if not check_order:
         # Make sure duplicated columns are considered multiple times
-        left = Counter(left)
-        right = Counter(right)
+        left = ColumnCounter(left)
+        right = ColumnCounter(right)
 
     if left != right:
         raise DifferentSchemaAssertionError(left, right)

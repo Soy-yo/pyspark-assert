@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 from typing import Optional, List, Dict, Type, Any, cast
 
 import pyspark
@@ -111,3 +111,10 @@ class Column:
 
     def __repr__(self) -> str:
         return repr(self._column)
+
+
+class ColumnCounter(Counter[Column]):
+
+    def __repr__(self) -> str:
+        contents = ', '.join(f"{column} [x{n}]" for column, n in self.items())
+        return f'[{contents}]'
