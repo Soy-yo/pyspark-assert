@@ -1,7 +1,7 @@
 import pytest
 from pyspark.sql import types
 
-from pyspark_assert._wrappers import Column, ImposterType, FrozenDictLike
+from pyspark_assert._wrappers import Column, ImposterType
 
 
 def test_column_get_name():
@@ -145,23 +145,3 @@ def test_column_repr_ignore_keys_removes_them_in_nested_structures(
         "(name='column', dataType=struct(fields=["
         "(name='field1', dataType=string), (name='field2', dataType=integer)]))"
     )
-
-
-def test_frozen_dict_is_nested():
-    data = {'x': {1: 2}}
-    frozen_dict = FrozenDictLike(data)
-    # hash on the dict raises an error, but we are able to do it on the frozen dict
-    # even with nested data
-    with pytest.raises(TypeError):
-        hash(data)
-
-    try:
-        hash(frozen_dict)
-    except TypeError:
-        pytest.fail()
-
-
-def test_frozen_dict_correct_repr():
-    data = {'x': {1: 2}, 'y': 3}
-    frozen_dict = FrozenDictLike(data)
-    assert repr(data) == repr(frozen_dict)

@@ -111,24 +111,3 @@ class Column:
 
     def __repr__(self) -> str:
         return repr(self._column)
-
-
-class FrozenDictLike:
-    """Utility class that allows hashing a dict with a dict-like repr."""
-
-    def __init__(self, data: Dict):
-        def transform(value):
-            if isinstance(value, dict):
-                return FrozenDictLike(value)
-            return value
-
-        self._data = tuple((k, transform(v)) for k, v in data.items())
-
-    def __eq__(self, other: FrozenDictLike):
-        return self._data == other._data
-
-    def __hash__(self):
-        return hash(self._data)
-
-    def __repr__(self):
-        return '{' + ', '.join(f'{repr(k)}: {repr(v)}' for k, v in self._data) + '}'
