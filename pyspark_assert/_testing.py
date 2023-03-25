@@ -10,7 +10,7 @@ from ._assertions import (
     DifferentSchemaAssertionError,
 )
 from ._utils import cache
-from ._wrappers import Column, ColumnName, FrozenDictLike
+from ._wrappers import Column
 
 
 _NULLABILITY_ATTRS = [
@@ -18,8 +18,8 @@ _NULLABILITY_ATTRS = [
     'valueContainsNull',
     'containsNull',
 ]
-
 _METADATA_ATTRS = ['metadata']
+_TYPE_ATTRS = ['dataType']
 
 
 def assert_frame_equal(
@@ -78,16 +78,11 @@ def assert_schema_equal(
         ignore += _NULLABILITY_ATTRS
     if not check_metadata:
         ignore += _METADATA_ATTRS
+    if not check_types:
+        ignore += _TYPE_ATTRS
 
-    if check_types:
-        left = [Column(column, ignore) for column in left]
-        right = [Column(column, ignore) for column in right]
-    else:
-        left = [ColumnName(column, ignore) for column in left]
-        right = [ColumnName(column, ignore) for column in right]
-
-    left = [FrozenDictLike(column.to_json()) for column in left]
-    right = [FrozenDictLike(column.to_json()) for column in right]
+    left = [Column(column, ignore) for column in left]
+    right = [Column(column, ignore) for column in right]
 
     if not check_order:
         # Make sure duplicated columns are considered multiple times
