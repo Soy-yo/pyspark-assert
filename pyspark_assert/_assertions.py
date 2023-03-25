@@ -1,4 +1,5 @@
 class TemplatedAssertionError(AssertionError):
+    """Assertion with custom messages based on templates."""
 
     msg_template: str
 

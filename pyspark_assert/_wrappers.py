@@ -8,8 +8,18 @@ from pyspark.sql import types
 
 
 class ImposterType:
+    """Class that represents a DataType, but with the subset of attributes needed."""
 
     def __init__(self, name: str, attrs: Optional[Dict[str, Any]] = None):
+        """Constructs an ImposterType instance.
+
+        Parameters
+        ----------
+        name
+            Name of the type, such as 'string', 'array'...
+        attrs
+            Mapping from attribute name to its value. Defaults to an empty dict.
+        """
         if attrs is None:
             attrs = {}
 
@@ -20,11 +30,13 @@ class ImposterType:
 
     @property
     def hash(self) -> int:
+        """Cached result of applying the hash function to this object."""
         if self._hash_value is None:
             self._hash_value = hash((self._name, self._hashable_attrs(self._attrs)))
         return self._hash_value
 
     def _hashable_attrs(self, attrs: Any):
+        """Recursively returns attrs using tuples to make them hashable."""
         if isinstance(attrs, dict):
             return tuple((key, self._hashable_attrs(value)) for key, value in attrs.items())
         if isinstance(attrs, (list, set)):
@@ -49,6 +61,11 @@ class ImposterType:
 
 
 class Column:
+    """Class to represent a column in a DataFrame.
+
+    It's just a wrapper over an ImposterType representing a StructField with a more complex
+    initialization.
+    """
 
     _lookup_attrs = defaultdict(list, cast(Dict[Type[types.DataType], List[str]], {
         types.StructField: ['name', 'dataType', 'nullable', 'metadata'],
@@ -71,9 +88,11 @@ class Column:
 
     @property
     def name(self) -> str:
+        """Name of the column."""
         return self._name
 
     def _cleanup(self, data_type: pyspark.sql.types.DataType) -> ImposterType:
+        """Recursively convert all DataTypes into ImposterTypes."""
         type_name = data_type.typeName() if not isinstance(data_type, types.StructField) else ''
         # Ensure same ordering
         attr_names = [
@@ -114,6 +133,11 @@ class Column:
 
 
 class ColumnCounter(Counter[Column]):
+    """Wrapper over a Counter to display a more user-friendly result on errors.
+
+    As it's intended to be used only with Columns, replaces the 'Counter({key: N})' repr with
+    '[column xN]' which is more similar to a simple list repr.
+    """
 
     def __repr__(self) -> str:
         contents = ', '.join(f"{column} [x{n}]" for column, n in self.items())
