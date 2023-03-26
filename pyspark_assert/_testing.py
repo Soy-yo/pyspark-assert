@@ -42,10 +42,10 @@ def assert_frame_equal(
     assert_schema_equal(
         left.schema,
         right.schema,
-        check_types,
-        check_nullable,
-        check_metadata,
-        check_column_order
+        check_types=check_types,
+        check_nullable=check_nullable,
+        check_metadata=check_metadata,
+        check_order=check_column_order
     )
 
     with cache(left) as left, cache(right) as right:
@@ -58,14 +58,15 @@ def assert_frame_equal(
             raise DifferentLengthAssertionError(len(left_data), len(right_data))
 
         if check_row_order:
-            _assert_data_equals(left_data, right_data, check_exact, rtol, atol)
+            _assert_data_equal(left_data, right_data, check_exact, rtol, atol)
         else:
-            _assert_data_equals_any_order(left_data, right_data, check_exact, rtol, atol)
+            _assert_data_equal_any_order(left_data, right_data, check_exact, rtol, atol)
 
 
 def assert_schema_equal(
         left: pyspark.sql.types.StructType,
         right: pyspark.sql.types.StructType,
+        *,
         check_types: bool = True,
         check_nullable: bool = True,
         check_metadata: bool = True,
@@ -91,7 +92,7 @@ def assert_schema_equal(
         raise DifferentSchemaAssertionError(left, right)
 
 
-def _assert_data_equals(
+def _assert_data_equal(
         left: List[pyspark.sql.Row],
         right: List[pyspark.sql.Row],
         check_exact: bool = False,
@@ -102,7 +103,7 @@ def _assert_data_equals(
         assert left == right
 
 
-def _assert_data_equals_any_order(
+def _assert_data_equal_any_order(
         left: List[pyspark.sql.Row],
         right: List[pyspark.sql.Row],
         check_exact: bool = False,

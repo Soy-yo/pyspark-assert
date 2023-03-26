@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import abc
+import math
 from collections import defaultdict, Counter
-from typing import Optional, List, Dict, Set, Type, Union, Generic, TypeVar, cast
+from functools import partial
+from typing import Optional, List, Dict, Set, Any, Type, Union, Generic, TypeVar, cast
 
 import pyspark
 from pyspark.sql import types
@@ -131,6 +133,63 @@ class Column:
 
     def __repr__(self) -> str:
         return repr(self._column)
+
+
+class ApproxFloat:
+    """Floating point number that uses intervals for equality comparisons.
+
+    It uses math.isclose function with relative tolerance given by rtol and absolute tolerance by
+    atol. It also overrides hash behavior since now x == y doesn't imply hash(x) == hash(y) if we
+    just use default float hash. Therefore, it uses the hash of the closer integer. This is not
+    optimal, in general, but in this context it might be sufficient for most cases.
+
+    The only problem here is that round[n - 1/2, n + 1/2) = n, thus n = round(n + 1/2 - eps) !=
+    round(n + 1/2 + eps) = n + 1 and therefore we can end up having n + 1/2 - eps == n + 1/2 + eps,
+    but not their hashes, since the rounded integer is different. To fix this, we also check that
+    the number x is close to floor(x) + 1/2 and in that case we use 2 * (floor(x) + 1/2) for
+    hashing (multiply by 2 to avoid approximation issues again).
+
+    With that, if x1 = n + 1/2 - eps and x2 = x + 1/2 - eps (assuming same tolerances), and
+    x1 == x2, then hash(x1) = hash(2 * floor(x1) + 1) = hash(2 * n + 1) = hash(2 * floor(x2) + 1) =
+    hash(x2).
+    """
+
+    def __init__(self, x: float, rtol: float, atol: float):
+        """Constructs a ApproxFloat instance.
+
+        Parameters
+        ----------
+        x
+            Float to wrap.
+        rtol
+            Relative tolerance allowed for equality.
+        atol
+            Absolute tolerance allowed for equality.
+        """
+        self._x = x
+        self._rtol = rtol
+        self._atol = atol
+
+    def __hash__(self) -> int:
+        # We need to make sure hash is consistent between close floats
+        floor = math.floor(self._x)
+        if self == floor + 0.5:
+            # Use int arithmetic just in case integer + 0.5 is not precise again
+            return hash(2 * floor + 1)
+        return hash(round(self._x))
+
+    def __eq__(self, other: Union[float, ApproxFloat]) -> bool:
+        # If comparing to another ApproxFloat we are ignoring its tolerances so this operation
+        # is not symmetric if tolerances are different
+        if isinstance(other, ApproxFloat):
+            other = other._x
+        return math.isclose(self._x, other, rel_tol=self._rtol, abs_tol=self._atol)
+
+    def __float__(self) -> float:
+        return self._x
+
+    def __repr__(self) -> str:
+        return repr(self._x)
 
 
 class HashableWrapper(Generic[T], abc.ABC):
