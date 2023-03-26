@@ -1,4 +1,3 @@
-import pytest
 from pyspark.sql import types
 
 from pyspark_assert._wrappers import Column, ImposterType
