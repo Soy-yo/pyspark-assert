@@ -1,6 +1,14 @@
 from pyspark.sql import types
 
-from pyspark_assert._wrappers import Column, ImposterType, ApproxFloat
+from pyspark_assert._wrappers import (
+    Column,
+    Row,
+    ImposterType,
+    ApproxFloat,
+    HashableList,
+    HashableSet,
+    HashableDict,
+)
 
 
 def test_column_get_name():
@@ -144,6 +152,74 @@ def test_column_repr_ignore_keys_removes_them_in_nested_structures(
         "(name='column', dataType=struct(fields=["
         "(name='field1', dataType=string), (name='field2', dataType=integer)]))"
     )
+
+
+def test_row_initialization():
+    row = types.Row(
+        bool=True,
+        int=1,
+        float=1.1,
+        string='hello world',
+        list=[1, 2, 3],
+        set={1, 2, 3},
+        dict={'a': 1, 'b': 2},
+        nested={'a': [1, 2, 3], 'b': {1: 'a', 2: 'b'}},
+    )
+    wrapped = Row(row)
+    assert wrapped._names == ['bool', 'int', 'float', 'string', 'list', 'set', 'dict', 'nested']
+    assert wrapped._row == (
+        True,
+        1,
+        1.1,
+        'hello world',
+        [1, 2, 3],
+        {1, 2, 3},
+        {'a': 1, 'b': 2},
+        {'a': [1, 2, 3], 'b': {1: 'a', 2: 'b'}},
+    )
+
+
+def test_row_initialization_hashable():
+    row = types.Row(
+        list=[1, 2, 3],
+        set={1, 2, 3},
+        dict={'a': 1, 'b': 2},
+        nested={'a': [1, 2, 3], 'b': {1: 'a', 2: 'b'}},
+    )
+    wrapped = Row(row, make_hashable=True)
+    assert wrapped._row == (
+        HashableList([1, 2, 3]),
+        HashableSet({1, 2, 3}),
+        HashableDict({'a': 1, 'b': 2}),
+        HashableDict({'a': HashableList([1, 2, 3]), 'b': HashableDict({1: 'a', 2: 'b'})}),
+    )
+
+
+def test_row_initialization_less_precise():
+    row = types.Row(float=0.3)
+    wrapped = Row(row, make_less_precise=True, rtol=1.0e-5, atol=1.0e-8)
+    assert len(wrapped._row) == 1
+    assert isinstance(wrapped._row[0], ApproxFloat)
+    assert wrapped._row[0]._x == 0.3
+
+
+def test_row_initialization_hashable_less_precise_nested_approx_floats():
+    row = types.Row(nested={0.3: 0.5})
+    wrapped = Row(row, make_hashable=True, make_less_precise=True, rtol=1.0e-5, atol=1.0e-8)
+    assert len(wrapped._row) == 1
+    assert isinstance(wrapped._row[0], HashableDict)
+    (k, v), = wrapped._row[0].items()
+    assert isinstance(k, ApproxFloat)
+    assert isinstance(v, ApproxFloat)
+    assert k._x == 0.3
+    assert v._x == 0.5
+
+
+def test_row_initialization_hashable_no_nested_approx_floats():
+    row = types.Row(nested={0.3: 0.5})
+    wrapped = Row(row, make_hashable=True)
+    assert len(wrapped._row) == 1
+    assert wrapped._row[0] == HashableDict({0.3: 0.5})
 
 
 def test_approx_float_eq_close_floats():

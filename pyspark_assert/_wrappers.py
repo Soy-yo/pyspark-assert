@@ -135,6 +135,72 @@ class Column:
         return repr(self._column)
 
 
+class Row:
+    """Wrapper around a Spark's Row to make it hashable, use ApproxFloats and change its repr."""
+
+    def __init__(
+            self,
+            row: pyspark.sql.Row,
+            make_hashable: bool = False,
+            make_less_precise: bool = False,
+            rtol: Optional[float] = None,
+            atol: Optional[float] = None,
+    ):
+        """Constructs a Row instance.
+
+        Parameters
+        ----------
+        row
+            Row to wrap.
+        make_hashable
+            Whether to make this row hashable or not. If False hash will raise NotImplementedError.
+            Defaults to False.
+        make_less_precise
+            Whether to use ApproxFloats or simple floats for float fields. Defaults to False.
+        rtol
+            If make_less_precise=True, relative tolerance passed down to ApproxFloat.
+        atol
+            If make_less_precise=True, absolute tolerance passed down to ApproxFloat.
+        """
+        self._hashable = make_hashable
+        self._float_converter = (
+            partial(ApproxFloat, rtol=rtol, atol=atol) if make_less_precise
+            else float
+        )
+        self._names = row.__fields__
+        self._row = tuple(self._cleanup(item) for item in row)
+
+    def _cleanup(self, data: Any) -> Any:
+        """Makes lists, sets and dicts hashable if needed and converts floats."""
+        if self._hashable:
+            if isinstance(data, list):
+                return HashableList([self._cleanup(elem) for elem in data])
+            if isinstance(data, set):
+                return HashableSet({self._cleanup(elem) for elem in data})
+            if isinstance(data, dict):
+                # Cleanup key as well in case it is a float
+                return HashableDict({
+                    self._cleanup(key): self._cleanup(value)
+                    for key, value in data.items()
+                })
+        if isinstance(data, float):
+            return self._float_converter(data)
+        return data
+
+    def __eq__(self, other: Row) -> bool:
+        # Ignore names, their just metadata
+        return self._row == other._row
+
+    def __hash__(self) -> int:
+        if not self._hashable:
+            raise NotImplementedError
+        return hash(self._row)
+
+    def __repr__(self) -> str:
+        contents = ', '.join(f'{name}={value}' for name, value in zip(self._names, self._row))
+        return f'({contents})'
+
+
 class ApproxFloat:
     """Floating point number that uses intervals for equality comparisons.
 
