@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+import abc
 from collections import defaultdict, Counter
-from typing import Optional, List, Dict, Type, Any, cast
+from typing import Optional, List, Dict, Set, Type, Union, Generic, TypeVar, cast
 
 import pyspark
 from pyspark.sql import types
 
 
+T = TypeVar('T')
+
+
 class ImposterType:
     """Class that represents a DataType, but with the subset of attributes needed."""
 
-    def __init__(self, name: str, attrs: Optional[Dict[str, Any]] = None):
+    def __init__(self, name: str, attrs: Optional[Dict] = None):
         """Constructs an ImposterType instance.
 
         Parameters
@@ -24,30 +28,13 @@ class ImposterType:
             attrs = {}
 
         self._name = name
-        self._attrs = attrs
-        # Store hash, so we don't have to compute it every time
-        self._hash_value = None
-
-    @property
-    def hash(self) -> int:
-        """Cached result of applying the hash function to this object."""
-        if self._hash_value is None:
-            self._hash_value = hash((self._name, self._hashable_attrs(self._attrs)))
-        return self._hash_value
-
-    def _hashable_attrs(self, attrs: Any):
-        """Recursively returns attrs using tuples to make them hashable."""
-        if isinstance(attrs, dict):
-            return tuple((key, self._hashable_attrs(value)) for key, value in attrs.items())
-        if isinstance(attrs, (list, set)):
-            return tuple(self._hashable_attrs(elem) for elem in attrs)
-        return attrs
+        self._attrs = HashableDict(attrs)
 
     def __eq__(self, other: ImposterType) -> bool:
         return self._name == other._name and self._attrs == other._attrs
 
     def __hash__(self) -> int:
-        return self.hash
+        return hash(self._attrs)
 
     def __repr__(self) -> str:
         if not self._attrs:
@@ -79,6 +66,15 @@ class Column:
             column: pyspark.sql.types.StructField,
             ignore: Optional[List[str]] = None,
     ):
+        """Constructs a Column instance.
+
+        Parameters
+        ----------
+        column
+            Top-level (column) StructField this column is wrapping.
+        ignore
+            List of (possibly nested) attributes to remove from the wrapped column.
+        """
         if ignore is None:
             ignore = []
 
@@ -107,15 +103,20 @@ class Column:
             if isinstance(attr, types.DataType):
                 attr = self._cleanup(attr)
             elif isinstance(attr, dict):
-                attr = {
+                attr = HashableDict({
                     key: self._cleanup(value) if isinstance(value, types.DataType) else value
                     for key, value in attr.items()
-                }
+                })
             elif isinstance(attr, list):
-                attr = [
+                attr = HashableList([
                     self._cleanup(elem) if isinstance(elem, types.DataType) else elem
                     for elem in attr
-                ]
+                ])
+            elif isinstance(attr, set):
+                attr = HashableSet({
+                    self._cleanup(elem) if isinstance(elem, types.DataType) else elem
+                    for elem in attr
+                })
 
             attrs[attr_name] = attr
 
@@ -130,6 +131,82 @@ class Column:
 
     def __repr__(self) -> str:
         return repr(self._column)
+
+
+class HashableWrapper(Generic[T], abc.ABC):
+    """Wrapper to make some objects hashable. Safe methods are proxied to the underlying object.
+
+    For simplicity, this class does NOT copy the object it is wrapping, so it's relying on the
+    object not being modified outside the class.
+    """
+
+    _SAFE_METHODS: List[str] = []
+    """List of methods that ensure the underlying object is not modified."""
+
+    def __init__(self, value: T):
+        """Constructs a HashableWrapper instance.
+
+        Parameters
+        ----------
+        value
+            Object of an non-hashable type.
+        """
+        self._value = value
+        self._hash_value = None
+        for method in self._SAFE_METHODS:
+            setattr(self, method, getattr(value, method))
+
+    @property
+    def hash(self) -> int:
+        """Cached hash value for bigger objects, so it only needs to be computed once."""
+        if self._hash_value is None:
+            self._hash_value = self._hash()
+        return self._hash_value
+
+    def __eq__(self, other: Union[T, HashableWrapper[T]]) -> bool:
+        if isinstance(other, self.__class__):
+            return self._value == other._value
+        return self._value == other
+
+    def __hash__(self) -> int:
+        return self.hash
+
+    def __repr__(self) -> str:
+        return repr(self._value)
+
+    def __bool__(self):
+        # Defining bool here as it seems not all classes define it
+        bool_ = getattr(self._value, '__bool__', bool)
+        return bool_(self._value)
+
+    @abc.abstractmethod
+    def _hash(self) -> int:
+        """Computes the hash value of the underlying object."""
+
+
+class HashableDict(HashableWrapper[Dict]):
+
+    _SAFE_METHODS = ['get', 'keys', 'values', 'items', '__getitem__', '__contains__', '__iter__',
+                     '__len__']
+
+    def _hash(self) -> int:
+        return hash(tuple(self._value.items()))
+
+
+class HashableList(HashableWrapper[List]):
+
+    _SAFE_METHODS = ['index', 'count', '__getitem__', '__contains__', '__iter__', '__len__']
+
+    def _hash(self) -> int:
+        return hash(tuple(self._value))
+
+
+class HashableSet(HashableWrapper[Set]):
+
+    _SAFE_METHODS = ['__contains__', '__iter__', '__len__']
+
+    def _hash(self) -> int:
+        return hash(tuple(self._value))
 
 
 class ColumnCounter(Counter[Column]):
