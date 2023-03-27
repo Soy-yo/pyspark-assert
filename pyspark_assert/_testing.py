@@ -34,6 +34,67 @@ def assert_frame_equal(
         rtol: float = 1.0e-5,
         atol: float = 1.0e-8,
 ):
+    """Asserts two PySpark DataFrames are equal.
+
+    left DataFrame is intended to be the actual DataFrame found after executing some process and
+    right should be the expected result.
+
+    This function only works for small DataFrames for unit testing as it will collect all data
+    into memory.
+
+    There are several keyword arguments to make the comparison less restrictive, and all of them
+    are active by default. Deactivating them can make the function run slower in some cases,
+    because it has to guess some things. For instance, turning row order off makes the function
+    find which row from left corresponds to which on right, but it makes the comparison more
+    flexible, because the user doesn't have to guess in which order will the rows return after a
+    groupBy operation.
+
+    Parameters
+    ----------
+    left
+        DataFrame to compare to expected.
+    right
+        Expected DataFrame.
+    check_types
+        Whether to check column types. If False, columns of equivalent types can be compared. For
+        example, if check_types=True and there is a column of longs in left which corresponds to
+        a column of ints in right, an assertion error will be raised. If check_types=False,
+        values will be compared regardless. Defaults to True.
+    check_nullable
+        Whether a nullable column can be compared against a non-nullable column. It also applies
+        to all nested types with nullable properties, such as maps with nullable values,
+        arrays with nullable elements or structs with nullable fields. Defaults to True.
+    check_metadata
+        Whether to check struct fields' metadata for equality. It also applies to all nested
+        structs. If True, metadata must be equal for all structs present in both DataFrames.
+        Defaults to True.
+    check_column_order
+        Whether to check left and right have columns in the same order. If False, the function
+        will attempt to map each column in right to its correspondent one in left, even if they
+        have duplicated column names. If there are two columns with the same name and the same
+        type they won't be disambiguated and will be considered to appear in the same order in
+        both DataFrames. If check_types=False and there are columns with the same name they
+        might not be found and result in an error. Defaults to True.
+    check_row_order
+        Whether to check both DataFrames have rows in the same order. Defaults to True.
+    check_exact
+        Whether to check floating point columns (float and double types) exactly. If False,
+        then :func:`math.isclose` will be used to compare columns with these types. It's useful for
+        calculated float columns, since computations with these types are not precise. Defaults
+        to True.
+    rtol
+        Relative tolerance (rel_tol) to use if check_exact=False (see :func:`math.isclose`).
+        Defaults to 1.0e-5.
+    atol
+        Absolute tolerance (abs_tol) to use if check_exact=False (see :func:`math.isclose`).
+        Defaults to 1.0e-8.
+
+    Raises
+    ------
+    AssertionError
+        If any of the checks fails.
+
+    """
     if not isinstance(left, pyspark.sql.DataFrame):
         raise IncorrectTypeAssertionError('left', 'DataFrame', left.__class__.__name__)
     if not isinstance(right, pyspark.sql.DataFrame):
