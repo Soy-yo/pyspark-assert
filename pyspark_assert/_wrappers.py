@@ -173,6 +173,8 @@ class Row:
     def _cleanup(self, data: Any) -> Any:
         """Makes lists, sets and dicts hashable if needed and converts floats."""
         if self._hashable:
+            if isinstance(data, bytearray):
+                return bytes(data)
             if isinstance(data, list):
                 return HashableList([self._cleanup(elem) for elem in data])
             if isinstance(data, set):
@@ -338,9 +340,9 @@ class ColumnCounter(Counter[Column]):
     """Wrapper over a Counter to display a more user-friendly result on errors.
 
     As it's intended to be used only with Columns, replaces the 'Counter({key: N})' repr with
-    '[column xN]' which is more similar to a simple list repr.
+    '[column [xN]]' which is more similar to a simple list repr.
     """
 
     def __repr__(self) -> str:
-        contents = ', '.join(f"{column} [x{n}]" for column, n in self.items())
+        contents = ', '.join(f'{column} [x{n}]' for column, n in self.items())
         return f'[{contents}]'
