@@ -128,6 +128,36 @@ def assert_schema_equal(
         check_metadata: bool = True,
         check_order: bool = True,
 ):
+    """Asserts that PySpark DataFame schemas are equal.
+
+    left schema is intended to be the actual schema found after executing some process and right
+    should be the expected result.
+
+    Parameters
+    ----------
+    left
+        Schema to compare to expected.
+    right
+        Expected Schema.
+    check_types
+        Whether to raise an assertion error if columns in left and right with the same names have
+        different types. Defaults to True.
+    check_nullable
+        Whether to raise an assertion error if columns in left is nullable and column in right
+        with the same name is not or vice versa. It also applies to nested types, such as map,
+        array or struct. Defaults to True.
+    check_metadata
+        Whether to raise an assertion error if columns in left and right with the same names have
+        different metadata. It also applies to nested structs. Defaults to True.
+    check_order
+        Whether to raise an exception if column order is not the same. Defaults to True.
+
+    Raises
+    ------
+    AssertionError
+        If any of the checks fails.
+
+    """
     ignore = []
     if not check_nullable:
         ignore += _NULLABILITY_ATTRS
@@ -158,6 +188,7 @@ def _assert_data_equal(
         rtol: float = 1.0e-5,
         atol: float = 1.0e-8,
 ):
+    """Asserts that data is equal in both DataFrames."""
     with cache(left) as left, cache(right) as right:
         # If we already checked columns are in the correct order there's no need to complicate stuff
         left_data = (
