@@ -22,6 +22,15 @@ class DifferentLengthAssertionError(TemplatedAssertionError):
     )
 
 
+class UnmatchableColumnAssertionError(TemplatedAssertionError):
+
+    msg_template = (
+        'Unable to match columns based on name and types:\n'
+        '\tExpected : {1}\n'
+        '\tActual   : {0}'
+    )
+
+
 class ListTemplatedAssertionError(TemplatedAssertionError):
 
     def __init__(self, left, right):
