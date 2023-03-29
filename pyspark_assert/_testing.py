@@ -106,12 +106,13 @@ def assert_frame_equal(
         check_types=check_types,
         check_nullable=check_nullable,
         check_metadata=check_metadata,
-        check_order=check_column_order
+        check_order=check_column_order,
     )
 
     _assert_data_equal(
         left,
         right,
+        check_column_order=check_column_order,
         check_row_order=check_row_order,
         check_exact=check_exact,
         rtol=rtol,

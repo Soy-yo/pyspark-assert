@@ -199,7 +199,7 @@ class Row:
         return hash(self._row)
 
     def __repr__(self) -> str:
-        contents = ', '.join(f'{name}={value}' for name, value in zip(self._names, self._row))
+        contents = ', '.join(f'{name}={repr(value)}' for name, value in zip(self._names, self._row))
         return f'({contents})'
 
 
