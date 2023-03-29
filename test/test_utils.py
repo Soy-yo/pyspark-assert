@@ -1,7 +1,9 @@
 import pyspark
+import pytest
 from pyspark.sql import types, functions as f
 
 from pyspark_assert._utils import collect_from
+from pyspark_assert._assertions import UnmatchableColumnAssertionError
 
 
 def test_collect_from_changes_order(types_df: pyspark.sql.DataFrame):
@@ -98,3 +100,16 @@ def test_collect_from_with_duplicated_column_name_same_type_different_order(
     ]
     data = collect_from(df, columns)
     assert data == [(-2147483648, 's1', 'foo')]
+
+
+def test_collect_from_with_duplicated_column_name_unmatchable_raises_assertion_error(
+        types_df: pyspark.sql.DataFrame
+):
+    df = types_df.select('string', 'integer', f.lit('foo').alias('string')).limit(1)
+    columns = [
+        types.StructField('integer', types.IntegerType()),
+        types.StructField('string', types.StringType()),
+        types.StructField('string', types.IntegerType()),
+    ]
+    with pytest.raises(UnmatchableColumnAssertionError):
+        collect_from(df, columns)
