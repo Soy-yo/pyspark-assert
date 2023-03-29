@@ -9,7 +9,7 @@ from ._assertions import (
     DifferentDataAssertionError,
 )
 from ._utils import cache, collect_from
-from ._wrappers import Column, Row, ColumnCounter
+from ._wrappers import Column, Row
 
 
 _NULLABILITY_ATTRS = [
@@ -171,8 +171,8 @@ def assert_schema_equal(
 
     if not check_order:
         # Make sure duplicated columns are considered multiple times
-        left = ColumnCounter(left)
-        right = ColumnCounter(right)
+        left = Counter(left)
+        right = Counter(right)
 
     if left != right:
         raise DifferentSchemaAssertionError(left, right)

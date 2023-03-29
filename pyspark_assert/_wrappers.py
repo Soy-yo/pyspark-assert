@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 import math
-from collections import defaultdict, Counter
+from collections import defaultdict
 from functools import partial
 from typing import Optional, List, Dict, Set, Any, Type, Union, Generic, TypeVar, cast
 
@@ -334,15 +334,3 @@ class HashableSet(HashableWrapper[Set]):
 
     def _hash(self) -> int:
         return hash(tuple(self._value))
-
-
-class ColumnCounter(Counter[Column]):
-    """Wrapper over a Counter to display a more user-friendly result on errors.
-
-    As it's intended to be used only with Columns, replaces the 'Counter({key: N})' repr with
-    '[column [xN]]' which is more similar to a simple list repr.
-    """
-
-    def __repr__(self) -> str:
-        contents = ', '.join(f'{column} [x{n}]' for column, n in self.items())
-        return f'[{contents}]'
