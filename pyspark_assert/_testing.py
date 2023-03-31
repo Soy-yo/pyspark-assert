@@ -8,7 +8,7 @@ from ._assertions import (
     DifferentSchemaAssertionError,
     DifferentDataAssertionError,
 )
-from ._utils import cache, collect_from
+from ._utils import collect_from
 from ._wrappers import Column, Row
 
 
@@ -190,35 +190,31 @@ def _assert_data_equal(
         atol: float = 1.0e-8,
 ):
     """Asserts that data is equal in both DataFrames."""
-    with cache(left) as left, cache(right) as right:
-        # If we already checked columns are in the correct order there's no need to complicate stuff
-        left_data = (
-            left.collect() if check_column_order
-            else collect_from(left, right.schema.fields)
-        )
-        right_data = right.collect()
+    # If we already checked columns are in the correct order there's no need to complicate stuff
+    left_data = left.collect() if check_column_order else collect_from(left, right.schema.fields)
+    right_data = right.collect()
 
-        if len(left_data) != len(right_data):
-            raise DifferentLengthAssertionError(len(left_data), len(right_data))
+    if len(left_data) != len(right_data):
+        raise DifferentLengthAssertionError(len(left_data), len(right_data))
 
-        def wrap_rows(data):
-            return [
-                Row(
-                    row,
-                    make_hashable=not check_row_order,
-                    make_less_precise=not check_exact,
-                    rtol=rtol,
-                    atol=atol,
-                )
-                for row in data
-            ]
+    def wrap_rows(data):
+        return [
+            Row(
+                row,
+                make_hashable=not check_row_order,
+                make_less_precise=not check_exact,
+                rtol=rtol,
+                atol=atol,
+            )
+            for row in data
+        ]
 
-        left_data = wrap_rows(left_data)
-        right_data = wrap_rows(right_data)
+    left_data = wrap_rows(left_data)
+    right_data = wrap_rows(right_data)
 
-        if not check_row_order:
-            left_data = Counter(left_data)
-            right_data = Counter(right_data)
+    if not check_row_order:
+        left_data = Counter(left_data)
+        right_data = Counter(right_data)
 
-        if left_data != right_data:
-            raise DifferentDataAssertionError(left_data, right_data)
+    if left_data != right_data:
+        raise DifferentDataAssertionError(left_data, right_data)
