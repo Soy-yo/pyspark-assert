@@ -1,6 +1,6 @@
 # PySpark Assert
 [![python](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue)](https://www.python.org)
-![Tests](https://github.com/Soy-yo/pyspark-assert/actions/workflows/test.yml/badge.svg?branch=main)
+![Tests](https://github.com/Soy-yo/pyspark-assert/actions/workflows/test-and-release.yml/badge.svg?branch=main)
 
 Simple unit testing library for PySpark.
 
