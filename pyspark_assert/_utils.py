@@ -10,26 +10,6 @@ from pyspark.sql.types import StructField, Row
 from pyspark_assert._assertions import UnmatchableColumnAssertionError
 
 
-@contextmanager
-def cache(df: pyspark.sql.DataFrame) -> ContextManager[pyspark.sql.DataFrame]:
-    """Helper function to use cache-unpersist as a context manager.
-
-    Parameters
-    ----------
-    df
-        DataFrame to be cached.
-
-    Returns
-    -------
-    -
-        Cached DataFrame.
-
-    """
-    df = df.cache()
-    yield df
-    df.unpersist()
-
-
 def collect_from(df: pyspark.sql.DataFrame, columns: List[StructField]) -> List[Row]:
     """Collects data form df in the same order as specified by columns.
 
