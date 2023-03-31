@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "pyspark-assert"
+version = "0.1.0"
+description = "Simple unit testing library for PySpark."
+authors = ["Soy-yo"]
+readme = "README.md"
+packages = [{include = "pyspark_assert"}]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0.0"
+pyspark = "^3.0"
+pytest-cov = "^4.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
