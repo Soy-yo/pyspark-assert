@@ -181,3 +181,101 @@ def test_aliased_columns_get_alias_ignored(spark: pyspark.sql.SparkSession):
         string_column('column3'),
     )
     assert_schema_equal(actual_schema, expected_schema)
+
+
+def test_non_matching_message_assertion_error():
+    left = schema(string_column('column1'), string_column('column2'), string_column('column3'))
+    right = schema(string_column('x'), string_column('column2'), string_column('y'))
+    with pytest.raises(DifferentSchemaAssertionError) as info:
+        assert_schema_equal(left, right, error_message_type='non_matching')
+
+    left_error = info.value.left
+    assert isinstance(left_error, list)
+    assert len(left_error) == 2
+    assert left_error[0].name == 'column1'
+    assert left_error[1].name == 'column3'
+
+    right_error = info.value.right
+    assert isinstance(right_error, list)
+    assert len(right_error) == 2
+    assert right_error[0].name == 'x'
+    assert right_error[1].name == 'y'
+
+
+def test_non_matching_message_different_length_assertion_error():
+    left = schema(string_column('column1'), string_column('column2'))
+    right = schema(string_column('x'), string_column('column2'), string_column('y'))
+    with pytest.raises(DifferentSchemaAssertionError) as info:
+        assert_schema_equal(left, right, error_message_type='non_matching')
+
+    left_error = info.value.left
+    assert isinstance(left_error, list)
+    assert len(left_error) == 1
+    assert left_error[0].name == 'column1'
+
+    right_error = info.value.right
+    assert isinstance(right_error, list)
+    assert len(right_error) == 2
+    assert right_error[0].name == 'x'
+    assert right_error[1].name == 'y'
+
+
+def test_non_matching_message_no_check_order_assertion_error():
+    left = schema(string_column('column1'), string_column('column2'), string_column('column3'))
+    right = schema(string_column('x'), string_column('column2'), string_column('y'))
+    with pytest.raises(DifferentSchemaAssertionError) as info:
+        assert_schema_equal(left, right, check_order=False, error_message_type='non_matching')
+
+    left_error = info.value.left
+    assert isinstance(left_error, dict)
+    assert len(left_error) == 2
+
+    left_names = {col.name: count for col, count in left_error.items()}
+    assert left_names == {'column1': 1, 'column3': 1}
+
+    right_error = info.value.right
+    assert isinstance(right_error, dict)
+    assert len(right_error) == 2
+
+    right_names = {col.name: count for col, count in right_error.items()}
+    assert right_names == {'x': 1, 'y': 1}
+
+
+def test_non_matching_message_no_check_order_repeated_column_assertion_error():
+    left = schema(string_column('column'), string_column('column'), string_column('column'))
+    right = schema(string_column('x'), string_column('column'), string_column('y'))
+    with pytest.raises(DifferentSchemaAssertionError) as info:
+        assert_schema_equal(left, right, check_order=False, error_message_type='non_matching')
+
+    left_error = info.value.left
+    assert isinstance(left_error, dict)
+
+    left_names = {col.name: count for col, count in left_error.items()}
+    assert left_names == {'column': 3}
+
+    right_error = info.value.right
+    assert isinstance(right_error, dict)
+
+    right_names = {col.name: count for col, count in right_error.items()}
+    assert right_names == {'x': 1, 'column': 1, 'y': 1}
+
+
+def test_full_message_assertion_error():
+    left = schema(string_column('column1'), string_column('column2'), string_column('column3'))
+    right = schema(string_column('x'), string_column('column2'), string_column('y'))
+    with pytest.raises(DifferentSchemaAssertionError) as info:
+        assert_schema_equal(left, right, error_message_type='full')
+
+    left_error = info.value.left
+    assert isinstance(left_error, list)
+    assert len(left_error) == 3
+    assert left_error[0].name == 'column1'
+    assert left_error[1].name == 'column2'
+    assert left_error[2].name == 'column3'
+
+    right_error = info.value.right
+    assert isinstance(right_error, list)
+    assert len(right_error) == 3
+    assert right_error[0].name == 'x'
+    assert right_error[1].name == 'column2'
+    assert right_error[2].name == 'y'

@@ -8,7 +8,7 @@ from ._assertions import (
     DifferentSchemaAssertionError,
     DifferentDataAssertionError,
 )
-from ._utils import collect_from
+from ._utils import collect_from, filter_matches
 from ._wrappers import Column, Row
 
 
@@ -33,6 +33,7 @@ def assert_frame_equal(
         check_exact: bool = True,
         rtol: float = 1.0e-5,
         atol: float = 1.0e-8,
+        error_message_type: str = 'non_matching',
 ):
     """Asserts two PySpark DataFrames are equal.
 
@@ -88,6 +89,11 @@ def assert_frame_equal(
     atol
         Absolute tolerance (abs_tol) to use if check_exact=False (see :func:`math.isclose`).
         Defaults to 1.0e-8.
+    error_message_type
+        How to represent the error message in case the assertion fails. Either 'full' to show both
+        DataFrames completely, even where left and right match, or 'non_matching' to display only
+        the values where left and right mismatch, resulting in cleaner messages. Defaults to
+        'non_matching'.
 
     Raises
     ------
@@ -107,6 +113,7 @@ def assert_frame_equal(
         check_nullable=check_nullable,
         check_metadata=check_metadata,
         check_order=check_column_order,
+        error_message_type=error_message_type,
     )
 
     _assert_data_equal(
@@ -117,6 +124,7 @@ def assert_frame_equal(
         check_exact=check_exact,
         rtol=rtol,
         atol=atol,
+        error_message_type=error_message_type,
     )
 
 
@@ -128,6 +136,7 @@ def assert_schema_equal(
         check_nullable: bool = True,
         check_metadata: bool = True,
         check_order: bool = True,
+        error_message_type: str = 'non_matching',
 ):
     """Asserts that PySpark DataFame schemas are equal.
 
@@ -152,6 +161,11 @@ def assert_schema_equal(
         different metadata. It also applies to nested structs. Defaults to True.
     check_order
         Whether to raise an exception if column order is not the same. Defaults to True.
+    error_message_type
+        How to represent the error message in case the assertion fails. Either 'full' to show both
+        schemas completely, even where left and right match, or 'non_matching' to display only the
+        columns where left and right mismatch, resulting in cleaner messages. Defaults to
+        'non_matching'.
 
     Raises
     ------
@@ -176,6 +190,8 @@ def assert_schema_equal(
         right = Counter(right)
 
     if left != right:
+        if error_message_type == 'non_matching':
+            left, right = filter_matches(left, right)
         raise DifferentSchemaAssertionError(left, right)
 
 
@@ -188,6 +204,7 @@ def _assert_data_equal(
         check_exact: bool = True,
         rtol: float = 1.0e-5,
         atol: float = 1.0e-8,
+        error_message_type: str = 'non_matching',
 ):
     """Asserts that data is equal in both DataFrames."""
     # If we already checked columns are in the correct order there's no need to complicate stuff
@@ -217,4 +234,6 @@ def _assert_data_equal(
         right_data = Counter(right_data)
 
     if left_data != right_data:
+        if error_message_type == 'non_matching':
+            left_data, right_data = filter_matches(left_data, right_data)
         raise DifferentDataAssertionError(left_data, right_data)

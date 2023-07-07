@@ -2,7 +2,7 @@ import pyspark
 import pytest
 from pyspark.sql import types, functions as f
 
-from pyspark_assert._utils import collect_from
+from pyspark_assert._utils import collect_from, filter_matches
 from pyspark_assert._assertions import UnmatchableColumnAssertionError
 
 
@@ -113,3 +113,57 @@ def test_collect_from_with_duplicated_column_name_unmatchable_raises_assertion_e
     ]
     with pytest.raises(UnmatchableColumnAssertionError):
         collect_from(df, columns)
+
+
+def test_filter_matches_list():
+    left = [1, 2, 3]
+    right = [0, 2, 4]
+    left, right = filter_matches(left, right)
+
+    assert left == [1, 3]
+    assert right == [0, 4]
+
+
+def test_filter_matches_list_full_match():
+    left = [1, 2, 3]
+    right = [1, 2, 3]
+    left, right = filter_matches(left, right)
+
+    assert left == []
+    assert right == []
+
+
+def test_filter_matches_list_left_longer():
+    left = [1, 2, 3]
+    right = [0, 2]
+    left, right = filter_matches(left, right)
+
+    assert left == [1, 3]
+    assert right == [0]
+
+
+def test_filter_matches_list_right_longer():
+    left = [1, 2]
+    right = [0, 2, 4]
+    left, right = filter_matches(left, right)
+
+    assert left == [1]
+    assert right == [0, 4]
+
+
+def test_filter_matches_dict():
+    left = {'x': 1, 'y': 1, 'z': 1}
+    right = {'a': 1, 'y': 1, 'z': 2}
+    left, right = filter_matches(left, right)
+
+    assert left == {'x': 1, 'z': 1}
+    assert right == {'a': 1, 'z': 2}
+
+
+def test_filter_matches_dict_full_match():
+    left = {'x': 1, 'y': 1, 'z': 1}
+    right = {'x': 1, 'y': 1, 'z': 1}
+    left, right = filter_matches(left, right)
+
+    assert left == {}
+    assert right == {}
