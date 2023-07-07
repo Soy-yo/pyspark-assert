@@ -21,9 +21,9 @@ class ImposterType:
 
         Parameters
         ----------
-        name
+        name : str
             Name of the type, such as 'string', 'array'...
-        attrs
+        attrs : dict, optional
             Mapping from attribute name to its value. Defaults to an empty dict.
         """
         if attrs is None:
@@ -72,9 +72,9 @@ class Column:
 
         Parameters
         ----------
-        column
+        column : StructField
             Top-level (column) StructField this column is wrapping.
-        ignore
+        ignore : list of str, optional
             List of (possibly nested) attributes to remove from the wrapped column.
         """
         if ignore is None:
@@ -150,16 +150,15 @@ class Row:
 
         Parameters
         ----------
-        row
+        row : Row
             Row to wrap.
-        make_hashable
+        make_hashable : bool, default=False
             Whether to make this row hashable or not. If False hash will raise NotImplementedError.
-            Defaults to False.
-        make_less_precise
-            Whether to use ApproxFloats or simple floats for float fields. Defaults to False.
-        rtol
+        make_less_precise : bool, default=False
+            Whether to use ApproxFloats or simple floats for float fields.
+        rtol : float, optional
             If make_less_precise=True, relative tolerance passed down to ApproxFloat.
-        atol
+        atol : float, optional
             If make_less_precise=True, absolute tolerance passed down to ApproxFloat.
         """
         self._hashable = make_hashable
@@ -227,11 +226,11 @@ class ApproxFloat:
 
         Parameters
         ----------
-        x
+        x : float
             Float to wrap.
-        rtol
+        rtol : float
             Relative tolerance allowed for equality.
-        atol
+        atol : float
             Absolute tolerance allowed for equality.
         """
         self._x = x
@@ -275,8 +274,8 @@ class HashableWrapper(Generic[T], abc.ABC):
 
         Parameters
         ----------
-        value
-            Object of an non-hashable type.
+        value : T
+            Object of a non-hashable type.
         """
         self._value = value
         self._hash_value = None
