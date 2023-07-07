@@ -9,6 +9,12 @@ functions similar to Pandas' testing module. The API provides two functions, `as
 and `assert_schema_equal`, which can be used in tests. The former compares two DataFrames and
 raises an `AssertionError` if they are not equal. The latter does the same, but with schemas.
 
+## Installation
+
+```shell
+pip install pyspark-assert
+```
+
 ## Usage
 
 Let's say we are testing some custom functionality over PySpark using Pytest.
