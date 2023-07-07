@@ -34,6 +34,8 @@ class UnmatchableColumnAssertionError(TemplatedAssertionError):
 class ListTemplatedAssertionError(TemplatedAssertionError):
 
     def __init__(self, left, right):
+        self.left = left
+        self.right = right
         left_msg = self._construct_msg(left)
         right_msg = self._construct_msg(right)
 

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from collections import defaultdict, Counter
-from contextlib import contextmanager
-from typing import ContextManager, List, Optional
+from itertools import zip_longest
+from typing import Any, Tuple, List, Dict, Optional, TypeVar
 
 import pyspark
 from pyspark.sql.types import StructField, Row
 
 from pyspark_assert._assertions import UnmatchableColumnAssertionError
+
+
+T = TypeVar('T', List[Any], Dict[Any, int])
 
 
 def collect_from(df: pyspark.sql.DataFrame, columns: List[StructField]) -> List[Row]:
@@ -46,6 +49,48 @@ def collect_from(df: pyspark.sql.DataFrame, columns: List[StructField]) -> List[
         result.append(Row(*names)(*values))
 
     return result
+
+
+def filter_matches(left: T, right: T) -> Tuple[T, T]:
+    """Removes from left and right values that match.
+
+    Parameters
+    ----------
+    left
+        One list of values or dict from value to number of occurrences of that value.
+    right
+        Another list of values or dict from value to number of occurrences of that value.
+
+    Returns
+    -------
+    -
+        Both left and right with values filtered out.
+
+    """
+    out_of_bound = object()
+
+    if isinstance(left, list):
+        left_ = []
+        right_ = []
+
+        for l_val, r_val in zip_longest(left, right, fillvalue=out_of_bound):
+            if l_val is out_of_bound:
+                right_.append(r_val)
+            elif r_val is out_of_bound:
+                left_.append(l_val)
+            elif l_val != r_val:
+                left_.append(l_val)
+                right_.append(r_val)
+    else:
+        left_ = left.copy()
+        right_ = right.copy()
+
+        for l_val, count in left.items():
+            if right_.get(l_val, 0) == count:
+                del left_[l_val]
+                del right_[l_val]
+
+    return left_, right_
 
 
 def _disambiguish_column_names(
