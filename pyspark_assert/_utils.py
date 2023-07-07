@@ -23,14 +23,14 @@ def collect_from(df: pyspark.sql.DataFrame, columns: List[StructField]) -> List[
 
     Parameters
     ----------
-    df
+    df : DataFrame
         DataFrame to collect.
-    columns
+    columns : list of StructField
         Fields of df in the order of collection.
 
     Returns
     -------
-    -
+    list of Row
         Result from collect in the correct order.
 
     """
@@ -56,15 +56,17 @@ def filter_matches(left: T, right: T) -> Tuple[T, T]:
 
     Parameters
     ----------
-    left
+    left : list or dict
         One list of values or dict from value to number of occurrences of that value.
-    right
+    right : list or dict
         Another list of values or dict from value to number of occurrences of that value.
 
     Returns
     -------
-    -
-        Both left and right with values filtered out.
+    left : list or dict
+        left filtered.
+    right : list or dict
+        right filtered.
 
     """
     out_of_bound = object()

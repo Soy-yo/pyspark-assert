@@ -52,48 +52,43 @@ def assert_frame_equal(
 
     Parameters
     ----------
-    left
+    left : DataFrame
         DataFrame to compare to expected.
-    right
+    right : DataFrame
         Expected DataFrame.
-    check_types
+    check_types : bool, default=True
         Whether to check column types. If False, columns of equivalent types can be compared. For
         example, if check_types=True and there is a column of longs in left which corresponds to
         a column of ints in right, an assertion error will be raised. If check_types=False,
-        values will be compared regardless. Defaults to True.
-    check_nullable
+        values will be compared regardless.
+    check_nullable : bool, default=True
         Whether a nullable column can be compared against a non-nullable column. It also applies
         to all nested types with nullable properties, such as maps with nullable values,
-        arrays with nullable elements or structs with nullable fields. Defaults to True.
-    check_metadata
+        arrays with nullable elements or structs with nullable fields.
+    check_metadata : bool, default=True
         Whether to check struct fields' metadata for equality. It also applies to all nested
         structs. If True, metadata must be equal for all structs present in both DataFrames.
-        Defaults to True.
-    check_column_order
+    check_column_order : bool, default=True
         Whether to check left and right have columns in the same order. If False, the function
         will attempt to map each column in right to its correspondent one in left, even if they
         have duplicated column names. If there are two columns with the same name and the same
         type they won't be disambiguated and will be considered to appear in the same order in
         both DataFrames. If check_types=False and there are columns with the same name they
-        might not be found and result in an error. Defaults to True.
-    check_row_order
-        Whether to check both DataFrames have rows in the same order. Defaults to True.
-    check_exact
+        might not be found and result in an error.
+    check_row_order : bool, default=True
+        Whether to check both DataFrames have rows in the same order.
+    check_exact : bool, default=True
         Whether to check floating point columns (float and double types) exactly. If False,
         then :func:`math.isclose` will be used to compare columns with these types. It's useful for
-        calculated float columns, since computations with these types are not precise. Defaults
-        to True.
-    rtol
+        calculated float columns, since computations with these types are not precise.
+    rtol : float, default=1.0e-5
         Relative tolerance (rel_tol) to use if check_exact=False (see :func:`math.isclose`).
-        Defaults to 1.0e-5.
-    atol
+    atol : float, default=1.0e-8
         Absolute tolerance (abs_tol) to use if check_exact=False (see :func:`math.isclose`).
-        Defaults to 1.0e-8.
-    error_message_type
+    error_message_type : {'full', 'non_matching'}, default='non_matching'
         How to represent the error message in case the assertion fails. Either 'full' to show both
         DataFrames completely, even where left and right match, or 'non_matching' to display only
-        the values where left and right mismatch, resulting in cleaner messages. Defaults to
-        'non_matching'.
+        the values where left and right mismatch, resulting in cleaner messages.
 
     Raises
     ------
@@ -145,27 +140,26 @@ def assert_schema_equal(
 
     Parameters
     ----------
-    left
+    left : StructType
         Schema to compare to expected.
-    right
+    right : StructType
         Expected Schema.
-    check_types
+    check_types : bool, default=True
         Whether to raise an assertion error if columns in left and right with the same names have
-        different types. Defaults to True.
-    check_nullable
+        different types.
+    check_nullable : bool, default=True
         Whether to raise an assertion error if columns in left is nullable and column in right
         with the same name is not or vice versa. It also applies to nested types, such as map,
-        array or struct. Defaults to True.
-    check_metadata
+        array or struct.
+    check_metadata : bool, default=True
         Whether to raise an assertion error if columns in left and right with the same names have
-        different metadata. It also applies to nested structs. Defaults to True.
-    check_order
+        different metadata. It also applies to nested structs.
+    check_order : bool, default=True
         Whether to raise an exception if column order is not the same. Defaults to True.
-    error_message_type
+    error_message_type : {'full', 'non_matching'}, default='non_matching'
         How to represent the error message in case the assertion fails. Either 'full' to show both
         schemas completely, even where left and right match, or 'non_matching' to display only the
-        columns where left and right mismatch, resulting in cleaner messages. Defaults to
-        'non_matching'.
+        columns where left and right mismatch, resulting in cleaner messages.
 
     Raises
     ------
