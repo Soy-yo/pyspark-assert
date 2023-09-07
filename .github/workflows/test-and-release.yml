@@ -37,7 +37,8 @@ jobs:
           distribution: 'adopt'
       - name: Install Poetry
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
+          curl -sSL https://install.python-poetry.org | ( [ '${{ matrix.jdk-version }}' = '3.7' ]
+            && python3 - --version 1.5.1 || python3 - )
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
       - name: Install dependencies
         run: poetry add tox@^4.4.0 tox-gh-actions@^3.1.0 && poetry install
