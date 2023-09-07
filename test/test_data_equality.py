@@ -97,6 +97,8 @@ def test_non_matching_message_assertion_error(
     assert right_error[0]._row[0] == 127
     assert right_error[1]._row[0] == -128
 
+    assert '2/3' in info.value.info
+
 
 def test_full_message_assertion_error(
         spark: pyspark.sql.SparkSession,
@@ -121,6 +123,8 @@ def test_full_message_assertion_error(
     assert right_error[0]._row[0] == 127
     assert right_error[1]._row[0] == 0
     assert right_error[2]._row[0] == -128
+
+    assert not info.value.info
 
 
 def test_non_matching_message_no_check_row_order_assertion_error(
@@ -148,6 +152,8 @@ def test_non_matching_message_no_check_row_order_assertion_error(
 
     right_values = {err._row[0]: count for err, count in right_error.items()}
     assert right_values == {-32768: 1, 32767: 1}
+
+    assert '2/3' in info.value.info
 
 
 def test_non_matching_message_different_counts_no_check_row_order_assertion_error(
@@ -180,3 +186,5 @@ def test_non_matching_message_different_counts_no_check_row_order_assertion_erro
 
     right_values = {err._row[0]: count for err, count in right_error.items()}
     assert right_values == {-32768: 1, 32767: 1, -128: 1, 127: 1}
+
+    assert '4/6' in info.value.info
