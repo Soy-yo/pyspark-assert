@@ -8,7 +8,7 @@ from ._assertions import (
     DifferentSchemaAssertionError,
     DifferentDataAssertionError,
 )
-from ._utils import collect_from, filter_matches
+from ._utils import collect_from, filter_matches, record_count
 from ._wrappers import Column, Row
 
 
@@ -178,15 +178,20 @@ def assert_schema_equal(
     left = [Column(column, ignore) for column in left]
     right = [Column(column, ignore) for column in right]
 
+    n = len(right)
+
     if not check_order:
         # Make sure duplicated columns are considered multiple times
         left = Counter(left)
         right = Counter(right)
 
     if left != right:
+        error_kwargs = {}
         if error_message_type == 'non_matching':
             left, right = filter_matches(left, right)
-        raise DifferentSchemaAssertionError(left, right)
+            n_failed = record_count(right)
+            error_kwargs['info'] = f'Showing only {n_failed}/{n} incorrect columns'
+        raise DifferentSchemaAssertionError(left, right, **error_kwargs)
 
 
 def _assert_data_equal(
@@ -205,8 +210,11 @@ def _assert_data_equal(
     left_data = left.collect() if check_column_order else collect_from(left, right.schema.fields)
     right_data = right.collect()
 
-    if len(left_data) != len(right_data):
-        raise DifferentLengthAssertionError(len(left_data), len(right_data))
+    n = len(left_data)
+    m = len(right_data)
+
+    if n != m:
+        raise DifferentLengthAssertionError(n, m)
 
     def wrap_rows(data):
         return [
@@ -228,6 +236,9 @@ def _assert_data_equal(
         right_data = Counter(right_data)
 
     if left_data != right_data:
+        error_kwargs = {}
         if error_message_type == 'non_matching':
             left_data, right_data = filter_matches(left_data, right_data)
-        raise DifferentDataAssertionError(left_data, right_data)
+            n_failed = record_count(right_data)
+            error_kwargs['info'] = f'Showing only {n_failed}/{n} incorrect records'
+        raise DifferentDataAssertionError(left_data, right_data, **error_kwargs)

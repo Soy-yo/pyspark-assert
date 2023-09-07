@@ -1,8 +1,10 @@
+from collections import Counter
+
 import pyspark
 import pytest
 from pyspark.sql import types, functions as f
 
-from pyspark_assert._utils import collect_from, filter_matches
+from pyspark_assert._utils import collect_from, filter_matches, record_count
 from pyspark_assert._assertions import UnmatchableColumnAssertionError
 
 
@@ -167,3 +169,15 @@ def test_filter_matches_dict_full_match():
 
     assert left == {}
     assert right == {}
+
+
+def test_record_count_list():
+    assert record_count([1, 2, 3]) == 3
+
+
+def test_record_count_counter():
+    assert record_count(Counter(['a', 'a', 'b'])) == 3
+
+
+def test_record_count_empty_counter():
+    assert record_count(Counter()) == 0

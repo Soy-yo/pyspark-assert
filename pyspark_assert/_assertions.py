@@ -33,13 +33,14 @@ class UnmatchableColumnAssertionError(TemplatedAssertionError):
 
 class ListTemplatedAssertionError(TemplatedAssertionError):
 
-    def __init__(self, left, right):
+    def __init__(self, left, right, *, info=None):
         self.left = left
         self.right = right
+        self.info = f'({info})' if info is not None else ''
         left_msg = self._construct_msg(left)
         right_msg = self._construct_msg(right)
 
-        super().__init__(left_msg, right_msg)
+        super().__init__(left_msg, right_msg, info=info)
 
     @staticmethod
     def _construct_msg(data):
@@ -56,7 +57,7 @@ class ListTemplatedAssertionError(TemplatedAssertionError):
 class DifferentSchemaAssertionError(ListTemplatedAssertionError):
 
     msg_template = (
-        'Schemas are different\n'
+        'Schemas are different {info}\n'
         '\tExpected : {1}\n'
         '\tActual   : {0}'
     )
@@ -65,7 +66,7 @@ class DifferentSchemaAssertionError(ListTemplatedAssertionError):
 class DifferentDataAssertionError(ListTemplatedAssertionError):
 
     msg_template = (
-        'Data is different\n'
+        'Data is different {info}\n'
         '\tExpected : {1}\n'
         '\tActual   : {0}'
     )
