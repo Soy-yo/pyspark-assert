@@ -201,6 +201,8 @@ def test_non_matching_message_assertion_error():
     assert right_error[0].name == 'x'
     assert right_error[1].name == 'y'
 
+    assert '2/3' in info.value.info
+
 
 def test_non_matching_message_different_length_assertion_error():
     left = schema(string_column('column1'), string_column('column2'))
@@ -218,6 +220,8 @@ def test_non_matching_message_different_length_assertion_error():
     assert len(right_error) == 2
     assert right_error[0].name == 'x'
     assert right_error[1].name == 'y'
+
+    assert '2/3' in info.value.info
 
 
 def test_non_matching_message_no_check_order_assertion_error():
@@ -240,6 +244,8 @@ def test_non_matching_message_no_check_order_assertion_error():
     right_names = {col.name: count for col, count in right_error.items()}
     assert right_names == {'x': 1, 'y': 1}
 
+    assert '2/3' in info.value.info
+
 
 def test_non_matching_message_no_check_order_repeated_column_assertion_error():
     left = schema(string_column('column'), string_column('column'), string_column('column'))
@@ -258,6 +264,8 @@ def test_non_matching_message_no_check_order_repeated_column_assertion_error():
 
     right_names = {col.name: count for col, count in right_error.items()}
     assert right_names == {'x': 1, 'column': 1, 'y': 1}
+
+    assert '3/3' in info.value.info
 
 
 def test_full_message_assertion_error():
@@ -279,3 +287,5 @@ def test_full_message_assertion_error():
     assert right_error[0].name == 'x'
     assert right_error[1].name == 'column2'
     assert right_error[2].name == 'y'
+
+    assert not info.value.info

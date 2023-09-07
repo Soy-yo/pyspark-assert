@@ -95,6 +95,13 @@ def filter_matches(left: T, right: T) -> Tuple[T, T]:
     return left_, right_
 
 
+def record_count(data: T) -> int:
+    if isinstance(data, list):
+        return len(data)
+
+    return sum(v for _, v in data.items())
+
+
 def _disambiguish_column_names(
         current_schema: List[StructField],
         target_schema: List[StructField],
